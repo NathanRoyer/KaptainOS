@@ -17,7 +17,7 @@ An OS must:
 * host programs
 * bring an abstraction layer between software and hardware
 * be able to differentiate users
-* ma`intain a stable and secure environment for the program it hosts
+* maintain a stable and secure environment for the program it hosts
 
 KaptainOS, as of now, can only fulfil the first two requirements.
 
