@@ -1,0 +1,99 @@
+KaptainOS
+
+1. Hello World !
+	• Objectif : Afficher du texte à l'écran
+2. Passez-moi le scalpel
+	• Objectif : Lire un secteur de la clé USB depuis laquelle on a démarré
+3. Un pas en arrière, deux pas en avant
+	• Objectif : Passer en mode 32-bits et Protégé (mais perdre les interruptions fournies par le BIOS)
+4. Le Grand Saut
+	• Objectif : Effectuer un "Far Jump" et donner le contrôle au secteur 2
+5. Bonsoir !
+	• Objectif : Afficher du texte à l'écran depuis le secteur 2
+6. Évolution, Révolution
+	• Objectif : Passage au C, automatisation de la compilation
+7. *Toc Toc* Qui est là ?
+	• Objectif : Interfaçage avec les périphériques par les ports IO
+8. Garder le CTRL
+	• Objectif : Écriture d'un pilote de clavier
+9. Tant de functionnalités à portée de main
+	• Objectif : Implémenter la pagination (Paging)
+10. Chacun sa place
+	• Objectif : Implémenter l'allocation dynamique de mémoire
+
+
+
+--- Non Réalisé ---
+11. *Toc Toc* Qu'est-ce que c'est ?
+	• Objectif : Interfaçage avec les périphériques PCI
+12. Sésame, ouvre-toi !
+	• Objectif : Connexion à internet avec la carte Ethernet en PCI
+13. Re-Bonjour !
+	• Objectif : Réalisation d'un outil de messagerie instantanée
+
+	
+Historique de progression :
+1.
+	- écriture d'une fonction "print" en assembleur, qui utilise l'interrupt 16 du BIOS (ajout d'un caractère)
+	succès le 20/02
+2.
+	- écriture d'une fonction "disk_load", qui utilise l'interrupt 19 du BIOS (lecture d'un secteur)
+	succès le 02/03
+3.
+	- écriture de la structure d'une GDT valide (Global Descriptor Table) pour acceder à toute la mémoire avec des addresses 32-bits
+	- utilisation de l'instruction "lgdt" (Load GDT) et allumage du bit "Protected Mode" du premier registre de contrôle du processeur
+	- initialisation des segments et de la pile
+	- utilisation d'un Far Jump pour réinitialiser le processeur
+	succès le 23/02
+4.
+	- bug : en émulateur i386, le secteur est correctement lu mais en environnement réel, les données sont des octets nuls.
+	- isolation du code problématique
+	- explication du problème sur le forum OSDev, la réponse des participants conseillait d'inclure un Bios Parameter Block valide à mon Bootloader et de changer de méthode d'écriture sur ma clé USB
+	- Utilisation de l'utilitaire "dd" pour installer mon bootloader sur ma clé USB
+	- Inclusion d'un Bios Parameter Block valide (description du média amovible), pas de changement
+	- Solution : Inclure une table de partition à partir de l'octet 446 a résolu le problème, solution trouvée grâce au code source du bootloader "GRUB"
+	- Problème : mauvais addressage des données retournées
+	- Solution : initialisation correcte la pile dès le démarrage
+	succès le 09/03
+5.
+	- La mémoire vidéo, en mode télétexte, se situe à partir de 0xb8000 : l'écriture d'un caractère à cet emplacement et au delà résulte en son affichage à l'écran
+	succès le 09/03
+6.
+	- Passage à un environnement Linux & Debian
+	- Utilisation de "GCC" pour compiler le code écrit en C
+	- utilisation de "nasm" pour compiler le code écrit en assembleur
+	- utilisation de "cat" pour concatener le bootloader et le noyau
+	- utilisation de "make" pour automatiser la compilation
+	- Problème : téléchargement incertain sur la clé USB avec "dd" sous Linux
+	- Solution : utilisation de l'émulateur "Qemu" sous Linux et téléchargement sous Windows pour la vérification du bon fonctionnement
+	succès le 10/03
+7.
+	- Écriture d'un premier pilote graphique pour afficher du texte
+	- Problème : Le calcul de la colonne et de la ligne où afficher la prochain caractère est erroné
+	- Solution : cela venait d'une erreur de programmation : je m'étais trompé entre colonnes et lignes dans une fonction de calcul calcul d'adresse.
+	succès le 13/03
+	Construction des systèmes d'interruptions :
+	- Interrupt Descriptor Table (IDT) : lie un numéro d'interruption à une Service Routine, fonction qui réagit à cette interruption.
+	- Interrupt Service Routine (ISR) : Fonctions qui réagissent aux interruptions, en l'occurrence pour transferrer le contrôle à une fonction générique écrite en C.
+	- Le code du tutoriel que j'ai suivi ne supporte les interruptions numérotées de 0 à 13, extension à 255 en modifiant la manière dont ce numéro est poussé, de byte (8 bits) à dword (32 bits).
+	- Interrupt Request (IRQ) : usage du Programmable Interrupt Controller (PIC) afin de détecter des signaux provenant des périphériques
+	Succès le 16/03
+8.
+	- Écriture de la fonction appelée lors de l'interruption : "keyboard_callback"
+	- Récupération du "scancode", grâce aux ports IO
+	- Paramétrage du clavier customisé (Ni AZERY ni QUERTY) sans les combinaisons ALTGR, mais avec les combinaisons MAJ
+	- Adaptation du pilote télétexte : écriture du plus basique des éditeurs de texte
+	succès le 16/03
+9.
+	- Étude théorique du fonctionnement de la pagination dans différentes implémentations :
+		• Intel® 64 and IA-32 Architectures Software Developer’s Manual
+		• James Molloy : JamesM's kernel development tutorials
+	- Réécriture du code de l'étape 5 : "Paging" (Pagination)
+	- Différences entre mon code et celui de James Molloy :
+		• Résolution du bug de sa fonction primitive kmalloc, son bitmask est erroné (voir /kernel/malloc.c)
+		• find_free_frame() : peut retourner -1 en cas d'échec
+		• Création d'id_map() : fonction qui alloue une page avec les mêmes addresses réelles et virtuelles.
+		• Allocation de la totalité des pages dès l'initialisation du noyau. Ce n'est pas très optimisé mais ça permet une allocation dynamique durable.
+			10/04 - J'ai envisagé une autre solution compatible et plus optimisée si celle-là pose problème.
+		• enable_paging : ma version permet de désactiver la pagination après l'avoir activée.
+	succès le 23/03

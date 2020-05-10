@@ -1,0 +1,134 @@
+--- Built-in drivers documentation (french) ---
+
+# software → time :
+
+void sleep(u32 ms);
+Met le programme en pause pendant ms millisecondes.
+	
+# hardware → io :
+
+u8 io_in_b(u16 port);
+u16 io_in_w(u16 port);
+Renvoie l'octet (8 bits) ou le mot (16 bits) du registre IO au port spécifié.
+
+void io_out_b(u16 port, unsigned char data);
+void io_out_w(u16 port, u16 data);
+Écrit l'octet ou le mot spécifié par data au port spécifié dans le registre IO.
+
+void io_wait();
+Bloque l'execution pendant une interaction avec le registre IO.
+
+# drivers → teletype :
+
+WHITE_ON_BLACK = 0x0f
+RED_ON_WHITE = 0xf4
+Constantes de palette utilisable dans la console en mode texte. D'autres valeurs peuvent être obtenues avec la commande debug_colors.
+	
+void teletype_disable_cursor();
+Désactive l'affichage du curseur.
+
+int get_cursor_offset();
+Renvoie la position du curseur dans la mémoire vidéo.
+
+void kprint_at(char *message, int col, int row, char attr);
+Affiche message aux coordonnées spécifiée par col et row avec la palette attr.
+
+int print_char(char c, int col, int row, char attr);
+Écrit le caractère c aux coordonnées spécifiée par col et row avec la palette attr.
+
+unsigned char get_char_at(int col, int row);
+Renvoie le caractère présent aux coordonnées col, row de l'écran.
+
+void set_print_color(char attr);
+Change la palette par défaut.
+
+void kprint(char * message);
+Affiche message aux coordonnées spécifiée par le curseur avec la palette par défaut.
+
+void kprint_color(char * message, char attr);
+Affiche message aux coordonnées spécifiée par le curseur avec la palette attr.
+
+void print_number(unsigned int n);
+Affiche n, en base 10 aux coordonnées spécifiée par le curseur avec la palette par défaut.
+
+void print_hex(unsigned int n);
+Affiche n, en base 16 aux coordonnées spécifiée par le curseur avec la palette par défaut.
+
+void move_cursor(unsigned char relative, int horizontal, int vertical);
+Déplace le curseur aux coordonnées horizontal, vertical. Le deplacement peut se faire de manière relative aux coordonnées actuelles ou pas, selon le booléen relative.
+
+void clear_screen();
+Efface tout le texte de l'écran et place le curseur en haut à gauche.
+
+# drivers → keyboard :
+structure modifier_keys_t :
+ u8 left_shift;
+ u8 left_ctrl;
+ u8 left_alt;
+ u8 left_gui;
+ u8 right_shift;
+ u8 right_ctrl;
+ u8 right_alt;
+ u8 right_gui;
+ u8 fn;
+ 
+Structure qui stocke l'état des touches "modifier".
+
+structure special_keys_t :
+ u8 insert;
+ u8 page_up;
+ u8 page_down;
+ u8 arrow_up;
+ u8 arrow_down;
+ u8 arrow_left;
+ u8 arrow_right;
+
+Structure qui stocke l'état des touches spéciales.
+
+structure keyboard_packet_t :
+ u8 value;
+ bool low_level;
+ modifier_keys_t mod_state;
+ special_keys_t spe_state;
+
+Structure envoyée à la fonction callback ; contient les détails de l'évenement détecté.
+
+bool (*keyboard_handler_t)(keyboard_packet_t packet);
+Prototype des fonctions callback acceptées par register_keyboard_handler,
+
+u32 register_keyboard_handler(keyboard_handler_t kbh, bool low_level);
+Enregistre la fonction callback kbh dans la liste des callbacks du mode Low ou High Level. Renvoie le numéro du callback.
+
+void remove_keyboard_handler(u32 handler_id, bool low_level);
+Retire le callback spécifié par handler_id.
+
+void wait_for_keyboard_input();
+Met le programme pause tant que l'utilisateur ne touche pas le clavier.
+
+char * readline(char * prefix);
+Affiche le texte prefix et laisse l'utilisateur entrer du texte. Une fois que l'utilisateur appuie sur ENTRER, la fonction retourne le texte entré.
+
+# drivers → vga :
+
+structure vga_mode :
+	u8 misc;
+	u8 sequencer[VGA_NUM_SEQ_REGS];
+	u8 crtc[VGA_NUM_CRTC_REGS];
+	u8 graphics_controller[VGA_NUM_GC_REGS];
+	u8 attr_controller[VGA_NUM_AC_REGS];
+	bool text;
+	u8 width, height;
+	u8 depth;
+
+Stocke les détails d'un mode VGA.
+
+vga_mode_t current_vga_mode;
+Stocke le mode VGA actuel.
+
+void vga_test();
+Fonction de test du driver VGA.
+
+# drivers → cpu_timer :
+
+u32 get_tick();
+Renvoie le nombre d'interruptions provoquées par l'horloge du CPU depuis le demarrage.
