@@ -5,6 +5,7 @@ An unfinished Operating System written in x86 ASM and C.
 Captain:
 * Synonym of Chief
 * Responsible of a ship good management
+
 OS:
 * Acronym of Operating System
 
